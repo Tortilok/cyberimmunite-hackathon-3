@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  payment_system:
+    build: ./payment-system/
+    image: payment_system
+    entrypoint: 
+        venv/bin/python start.py
+    container_name: payment_system
+    environment:
+      - MODULE_NAME=payment-system
+    ports:
+      - 8000:8000
+
+  cars:
+    build: ./cars/
+    image: cars
+    entrypoint: 
+        venv/bin/python start.py
+    container_name: cars
+    environment:
+      - MODULE_NAME=cars
+    ports:
+      - 8001:8000
+    
+  mobile_client:
+    build: ./mobile-client/
+    image: mobile_client
+    entrypoint: 
+        venv/bin/python start.py
+    container_name: mobile_client
+    environment:
+      - MODULE_NAME=mobile-client
+    ports:
+      - 8002:8000
+  
+  management_system:
+    build: ./management-system/
+    image: management_system
+    entrypoint: 
+        venv/bin/python start.py
+    container_name: management_system
+    environment:
+      - MODULE_NAME=management-system
+    ports:
+      - 8003:8000

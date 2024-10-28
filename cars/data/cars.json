@@ -1,0 +1,18 @@
+[
+    {
+        "brand": "Toyota",
+        "has_air_conditioner": true,
+        "has_heater": false,
+        "has_navigator": true },
+    {
+        "brand": "Honda",
+        "has_air_conditioner": false,
+        "has_heater": true,
+        "has_navigator": false },
+    {
+        "brand": "Ford",
+        "has_air_conditioner": true,
+        "has_heater": true,
+        "has_navigator": true
+    }
+]

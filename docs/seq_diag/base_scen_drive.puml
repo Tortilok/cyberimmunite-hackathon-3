@@ -1,0 +1,43 @@
+@startuml base_scen_drive
+title Базовый сценарий поездки
+autonumber
+actor "Клиент" as client
+participant "Мобильное приложение\nклиента" as mobile
+participant "Система управления\nпарком автомобилей" as org
+participant "Система оплаты\nуслуг" as bank
+participant "Автомобиль" as car
+group контракт на поездку
+    client -> mobile: выбор и запрос авто
+    mobile -> org: запрос авто
+    org -> client: проверка профиля\nсчёт на предоплату
+    client -> mobile: оплата услуг
+    mobile -> bank: оплата услуг
+    bank --> client: подтверждение
+    bank -> org: услуги оплачены
+    mobile -> car: запрос доступа
+    car -> org: запрос доступа\nи тарифного плана
+    activate org
+    org -> org: проверка профиля\nи статуса оплаты
+    org --> car: разрешение доступа\nтарифный план
+    deactivate
+    car -> mobile: разрешение доступа
+end
+group поездка
+    client -> car: запрос оплачиваемой услуги
+    activate car
+    car -> car: проверка оплаты\nоказание услуги
+    car --> client: стастус выполнения запроса на услугу
+    deactivate
+end
+group завершение поездки и возврат авто
+    client -> car: возврат авто
+    car -> org: возврат авто\nсводка по поездке
+    org -> mobile: финальный счёт
+    mobile -> client: финальный счёт
+    client -> mobile: оплата
+    mobile -> bank: оплата
+    bank -> org: оплата финального счёта
+    org -> mobile: финальный чек по услуге
+    mobile -> client: финальный чек по услуге
+end
+@enduml
