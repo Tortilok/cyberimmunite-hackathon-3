@@ -1,14 +1,228 @@
 version: '3.8'
 
 services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.2.0
+    container_name: zookeeper
+    environment:
+      - ZOOKEEPER_CLIENT_PORT=2181
+      - ZOOKEEPER_TICK_TIME=2000
+    ports:
+     - "2181:2181"
+
+  broker:
+    image: confluentinc/cp-kafka:7.2.0
+    container_name: broker
+    ports:
+      - "9092:9092"
+    expose:
+     - "29092"
+    depends_on:
+      - zookeeper
+    env_file: ./management-system/modules/broker/config/.env
+
+  monitor:
+    build: ./management-system/modules/monitor
+    image: monitor
+    entrypoint:
+      - bash
+      - -c
+      - |
+        echo 'Giving Kafka a bit of time to start up…'
+        sleep 20
+        venv/bin/python start.py /shared/config.ini
+    container_name: monitor
+    environment:
+      - MODULE_NAME=monitor
+    volumes:
+      - ./management-system/shared:/shared
+
+  auth:
+    build: ./management-system/modules/auth
+    image: auth
+    entrypoint:
+      - bash
+      - -c
+      - |
+        echo 'Giving Kafka a bit of time to start up…'
+        sleep 20
+        venv/bin/python start.py /shared/config.ini
+    container_name: auth
+    environment:
+      - MODULE_NAME=auth
+      - MODULE_PORT=6064
+    volumes:
+      - ./management-system/shared:/shared
+    ports:
+      - 6064:6064
+
+  bank-pay:
+    build: ./management-system/modules/bank-pay
+    image: bank-pay
+    entrypoint:
+      - bash
+      - -c
+      - |
+        echo 'Giving Kafka a bit of time to start up…'
+        sleep 20
+        venv/bin/python start.py /shared/config.ini
+    container_name: bank-pay
+    environment:
+      - MODULE_NAME=bank-pay
+      - MODULE_PORT=6065
+    volumes:
+      - ./management-system/shared:/shared
+    ports:
+      - 6065:6065
+
+  com-mobile:
+    build: ./management-system/modules/com-mobile
+    image: com-mobile
+    entrypoint:
+      - bash
+      - -c
+      - |
+        echo 'Giving Kafka a bit of time to start up…'
+        sleep 20
+        venv/bin/python start.py /shared/config.ini
+    container_name: com-mobile
+    environment:
+      - MODULE_NAME=com-mobile
+      - MODULE_PORT=6066
+    volumes:
+      - ./management-system/shared:/shared
+    ports:
+      - 6066:6066
+
+  control-drive:
+    build: ./management-system/modules/control-drive
+    image: control-drive
+    entrypoint:
+      - bash
+      - -c
+      - |
+        echo 'Giving Kafka a bit of time to start up…'
+        sleep 20
+        venv/bin/python start.py /shared/config.ini
+    container_name: control-drive
+    environment:
+      - MODULE_NAME=control-drive
+      - MODULE_PORT=6067
+    volumes:
+      - ./management-system/shared:/shared
+    ports:
+      - 6067:6067
+
+  manage-drive:
+    build: ./management-system/modules/manage-drive
+    image: manage-drive
+    entrypoint:
+      - bash
+      - -c
+      - |
+        echo 'Giving Kafka a bit of time to start up…'
+        sleep 20
+        venv/bin/python start.py /shared/config.ini
+    container_name: manage-drive
+    environment:
+      - MODULE_NAME=manage-drive
+      - MODULE_PORT=6068
+    volumes:
+      - ./management-system/shared:/shared
+    ports:
+      - 6068:6068
+
+  profile-client:
+    build: ./management-system/modules/profile-client
+    image: profile-client
+    entrypoint:
+      - bash
+      - -c
+      - |
+        echo 'Giving Kafka a bit of time to start up…'
+        sleep 20
+        venv/bin/python start.py /shared/config.ini
+    container_name: profile-client
+    environment:
+      - MODULE_NAME=profile-client
+      - MODULE_PORT=6069
+    volumes:
+      - ./management-system/shared:/shared
+    ports:
+      - 6069:6069
+
+  receiver-car:
+    build: ./management-system/modules/receiver-car
+    image: receiver-car
+    entrypoint:
+      - bash
+      - -c
+      - |
+        echo 'Giving Kafka a bit of time to start up…'
+        sleep 20
+        venv/bin/python start.py /shared/config.ini
+    container_name: receiver-car
+    environment:
+      - MODULE_NAME=receiver-car
+      - MODULE_PORT=6070
+    volumes:
+      - ./management-system/shared:/shared
+    ports:
+      - 6070:6070
+
+  sender-car:
+    build: ./management-system/modules/sender-car
+    image: sender-car
+    entrypoint:
+      - bash
+      - -c
+      - |
+        echo 'Giving Kafka a bit of time to start up…'
+        sleep 20
+        venv/bin/python start.py /shared/config.ini
+    container_name: sender-car
+    environment:
+      - MODULE_NAME=sender-car
+      - MODULE_PORT=6071
+    volumes:
+      - ./management-system/shared:/shared
+    ports:
+      - 6071:6071
+
+  verify:
+    build: ./management-system/modules/verify
+    image: verify
+    entrypoint:
+      - bash
+      - -c
+      - |
+        echo 'Giving Kafka a bit of time to start up…'
+        sleep 20
+        venv/bin/python start.py /shared/config.ini
+    container_name: verify
+    environment:
+      - MODULE_NAME=verify
+      - MODULE_PORT=6072
+    volumes:
+      - ./management-system/shared:/shared
+    ports:
+      - 6072:6072
+
   payment_system:
     build: ./payment-system/
-    image: payment_system
+    image: payment-system
     entrypoint: 
-        venv/bin/python start.py
-    container_name: payment_system
+      - bash
+      - -c
+      - |
+        echo 'Giving Kafka a bit of time to start up…'
+        sleep 20
+        venv/bin/python start.py /shared/config.ini
+    container_name: payment-system
     environment:
       - MODULE_NAME=payment-system
+    volumes:
+      - ./management-system/shared:/shared
     ports:
       - 8000:8000
 
@@ -16,31 +230,34 @@ services:
     build: ./cars/
     image: cars
     entrypoint: 
-        venv/bin/python start.py
+      - bash
+      - -c
+      - |
+        echo 'Giving Kafka a bit of time to start up…'
+        sleep 20
+        venv/bin/python start.py /shared/config.ini
     container_name: cars
     environment:
       - MODULE_NAME=cars
+    volumes:
+      - ./management-system/shared:/shared
     ports:
       - 8001:8000
     
   mobile_client:
     build: ./mobile-client/
-    image: mobile_client
+    image: mobile-client
     entrypoint: 
-        venv/bin/python start.py
-    container_name: mobile_client
+      - bash
+      - -c
+      - |
+        echo 'Giving Kafka a bit of time to start up…'
+        sleep 20
+        venv/bin/python start.py /shared/config.ini
+    container_name: mobile-client
     environment:
       - MODULE_NAME=mobile-client
+    volumes:
+      - ./management-system/shared:/shared
     ports:
       - 8002:8000
-  
-  management_system:
-    build: ./management-system/
-    image: management_system
-    entrypoint: 
-        venv/bin/python start.py
-    container_name: management_system
-    environment:
-      - MODULE_NAME=management-system
-    ports:
-      - 8003:8000
