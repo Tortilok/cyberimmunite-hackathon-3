@@ -20,8 +20,8 @@ SLEEP_TIME := 20
 dev_install:
 	sudo apt install librdkafka-dev
 	python3 -m venv .venv
-	venv/bin/python3 -m pip install -U pip
-	venv/bin/pip install -r requirements.txt
+	.venv/bin/python3 -m pip install -U pip
+	.venv/bin/pip install -r requirements.txt
 
 all:
 	docker compose up --build -d
