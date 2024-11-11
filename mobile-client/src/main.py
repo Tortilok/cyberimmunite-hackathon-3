@@ -21,7 +21,6 @@ CARS_URL = 'http://cars:8000'
 def get_cars():
     data = request.json
     name = data.get('name')
-    # password = data.get('password')
     experience = data.get('experience')
     cars = get_car()
     while len(cars) == 0:
@@ -80,18 +79,6 @@ def final_pay():
         return jsonify(final_receipt.json()['final_receipt'])
     else:
         return jsonify(final_receipt.json()), 404
-
-'''
-def auth(name, password, experience):
-    response = requests.post(f'{MANAGMENT_URL}/auth/{name}', json={'password': password, 'experience': experience})
-    if response.status_code == 200:
-        print(f"Авторизован {name}", response.json())
-        return response.json()['login']
-    elif response.status_code == 404:
-        print(f"Неверный пароль {name}", response.json())
-    else:
-        print("Ошибка авторизации", response.json())
-'''
 
 def get_car():
     response = requests.get(f'{MANAGMENT_URL}/cars')

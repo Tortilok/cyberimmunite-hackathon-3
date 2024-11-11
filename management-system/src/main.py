@@ -24,7 +24,6 @@ class Client(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     client_name = db.Column(db.String(100), nullable=False)
     experience = db.Column(db.Integer, nullable=False)
-    # password = db.Column(db.String(100), nullable=False)
     car = db.Column(db.String(100))
     prepayment = db.Column(db.Integer)
     prepayment_status = db.Column(db.String(100))
@@ -64,28 +63,6 @@ def counter_payment(trip_time, tariff, experience):
         else:
             counter += round(trip_time / 10 * tariff_hours/experience, 2) 
     return counter
-
-'''
-# Auth client
-@app.route('/auth/<string:name>', methods=['POST'])
-def auth(name):
-    data = request.json
-    password = str(data.get('password'))
-    client = Client.query.filter_by(client_name=name).one_or_none()
-    if not client:
-        experience = data.get('experience')
-        client = Client(client_name=name, experience=experience, password=password)
-        db.session.add(client)
-        db.session.commit()
-        print(f"Зарегистрирован {name}")
-        return jsonify({'login': True})
-    elif client.password == password:
-        print(f"Авторизирован {name}")
-        return jsonify({'login': True})
-    else:
-        print(f"Неверный пароль {name}")
-        return jsonify({'login': False}), 404
-'''
 
 
 # List all avaible cars
