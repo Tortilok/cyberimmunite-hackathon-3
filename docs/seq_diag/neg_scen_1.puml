@@ -1,0 +1,82 @@
+@startuml base_scen_drive
+title Базовый сценарий поездки
+autonumber
+actor "Клиент" as client
+participant "Мобильное\nприложение\nклиента" as mobile
+participant "Связь с\nмобильным\nклиентом" as com_mob
+participant "Профиль\nклиента" as profile
+participant "Управление\nпоездкой" as manage_drive #red
+participant "Связь\nс автомобилем" as com_car 
+participant "Автомобиль" as car
+participant "Работа\nс системой оплаты\nуслуг и счетами" as bank_pay
+participant "Система оплаты\nуслуг" as bank
+group контракт на поездку
+    client -> mobile: выбор и запрос авто
+    mobile -> com_mob: запрос авто
+    com_mob -> profile: запрос авто
+    profile -> manage_drive: запрос авто
+    manage_drive -> com_car: опрос\nавтомобилей
+    com_car -> car: опрос\nавтомобилей
+    car -> com_car: статусы\nавтомобилей
+    com_car -> manage_drive: статусы\nавтомобилей
+    manage_drive -> profile: список\nавтомобилей
+    profile -> com_mob: список автомобилей\nи тарифы
+    com_mob -> mobile: список автомобилей\nи тарифы
+    mobile <- mobile: выбор авто\nи тарифа
+    mobile -> com_mob: авто и тариф
+    com_mob -> profile: авто и тариф
+    profile -> bank_pay: авто и тариф
+    bank_pay -> bank: создание предоплаты
+    bank -> bank_pay: счёт на предоплату
+    bank_pay -> profile: счёт на предоплату
+    profile -> com_mob: счёт на предоплату
+    com_mob -> mobile: счёт на предоплату
+    mobile -> client: счёт на предоплату
+    client -> mobile: оплата услуг
+    mobile -> bank: оплата услуг
+    bank --> client: подтверждение
+    bank -> bank_pay: услуги оплачены
+    bank_pay -> profile: услуги оплачены
+    mobile -> car: запрос доступа
+    car -> com_car: запрос доступа\nи тарифного плана
+    activate profile
+    com_car -> manage_drive: запрос доступа\nи тарифного плана
+    manage_drive -> profile: запрос доступа\nи тарифного плана
+    profile -> profile: проверка профиля\nи статуса оплаты
+    profile --> manage_drive: разрешение доступа\nтарифный план
+    manage_drive --> com_car: разрешение доступа\nтарифный план
+    com_car --> car: разрешение доступа\nтарифный план
+    deactivate profile
+    car -> mobile: разрешение доступа
+end
+group поездка
+    client -> car: запрос оплачиваемой услуги
+    activate car
+    car -> car: проверка оплаты\nоказание услуги
+    car --> client: стастус выполнения запроса на услугу
+    deactivate car
+    car --> com_car: телеметрия
+    com_car --> manage_drive: телеметрия
+    manage_drive -[#red]-> manage_drive: игнорирование нарушений\n(скорость, границы зон поездки)
+end
+group завершение поездки и возврат авто
+    client -> car: возврат авто
+    car -> com_car: возврат авто\nсводка по поездке
+    com_car -> manage_drive: возврат авто\nсводка по поездке
+    manage_drive -> profile: возврат авто\nсводка по поездке
+    profile -> bank_pay: сводка по поездке
+    bank_pay -> bank: создание\nфинального счёта
+    bank -> bank_pay: финальный счёт
+    bank_pay -> profile: финальный счёт
+    profile -> com_mob: финальный счёт
+    com_mob -> mobile: финальный счёт
+    mobile -> client: финальный счёт
+    client -> mobile: оплата
+    mobile -> bank: оплата
+    bank -> bank_pay: оплата\nфинального счёта
+    bank_pay -> profile: оплата\nфинального счёта
+    profile -> com_mob: финальный чек\nпо услуге
+    com_mob -> mobile: финальный чек\nпо услуге
+    mobile -> client: финальный чек\nпо услуге
+end
+@enduml

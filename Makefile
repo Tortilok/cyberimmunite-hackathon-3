@@ -18,7 +18,7 @@ MODULES := monitor \
 SLEEP_TIME := 20
 
 dev_install:
-	sudo apt install librdkafka-dev
+	sudo apt install librdkafka-dev python3-venv
 	python3 -m venv .venv
 	.venv/bin/python3 -m pip install -U pip
 	.venv/bin/pip install -r requirements.txt
@@ -47,7 +47,7 @@ test:
 	make clean
 
 test_security:
-	python3 tests/test_monitor.py
+	python3 tests/test_policies.py
 
 clean:
 	docker compose down 
