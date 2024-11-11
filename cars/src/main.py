@@ -8,7 +8,7 @@ import os
 import threading
 from werkzeug.exceptions import HTTPException
 
-MANAGMENT_URL = 'http://management_system:8000'
+MANAGMENT_URL = 'http://0.0.0.0:6070'
 
 HOST = '0.0.0.0'
 PORT = 8000

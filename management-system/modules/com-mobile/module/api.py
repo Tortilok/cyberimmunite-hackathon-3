@@ -13,6 +13,7 @@ from werkzeug.exceptions import HTTPException
 HOST: str = "0.0.0.0"
 PORT: int = int(os.getenv("MODULE_PORT"))
 MODULE_NAME: str = os.getenv("MODULE_NAME")
+MAX_WAIT_TIME: int = 10
 
 
 # Очереди задач и ответов
@@ -23,28 +24,76 @@ _response_queue: multiprocessing.Queue = None
 app = Flask(__name__)
 
 
-@app.get("/")
-def index():
-    print("Connected to", HOST, PORT)
-    return {"message": "ok"}
+def send_to_profile_client(details):
+    """ Отправляет задачу на проверку аутентичности. """
+    if not details:
+        abort(400)
 
-'''# List all avaible cars
+    details["deliver_to"] = "profile-client"
+    details["source"] = MODULE_NAME
+    details["id"] = uuid4().__str__()
+
+    try:
+        _requests_queue.put(details)
+        print(f"{MODULE_NAME} update event: {details}")
+    except Exception as e:
+        print("[COM-MOBILE_DEBUG] malformed request", e)
+        abort(400)
+
+
+def wait_response():
+    """ Ожидает завершение выполнения задачи. """
+    start_time = time.time()
+    while 1:
+        if time.time() - start_time > MAX_WAIT_TIME:
+            break
+
+        try:
+            response = _response_queue.get(timeout=MAX_WAIT_TIME)
+        except Exception as e:
+            print("[COM-MOBILE_DEBUG] timeout...", e)
+            continue
+
+        if not isinstance(response, dict):
+            print("[COM-MOBILE_DEBUG] not a dict...")
+            continue
+
+        data = response.get('data')
+        if response.get('deliver_to') != 'com-mobile' or not data:
+            print("[COM-MOBILE_DEBUG] something strange...")
+            continue
+
+        print("[COM-MOBILE_DEBUG] response", response)
+        return data
+
+    print("[COM-MOBILE_DEBUG] OUT OF TIME...")
+
+    return None
+
+
+# List all avaible cars
 @app.route('/cars', methods=['GET'])
 def get_all_cars():
-    response = requests.get(f'{CARS_URL}/car/status/all')
-    if response.status_code == 200:
-        cars = response.json()
-        avaible_cars = [car['brand'] for car in cars if car['occupied_by'] is None]
-        return jsonify(avaible_cars)
-    else:
-        return jsonify([])
+    details_to_send = {
+        "operation": "get_cars"
+    }
+    send_to_profile_client(details_to_send)
+    data = wait_response()
+    return jsonify(data)
+
 
 # List all avaible tariff
 @app.route('/tariff', methods=['GET'])
 def get_tariff():
-    return jsonify(TARIFF)
+    details_to_send = {
+        "operation": "get_tariff"
+    }
+    send_to_profile_client(details_to_send)
+    data = wait_response()
+    return jsonify(data)
 
 
+'''
 # Select car and prepayment calculation
 @app.route('/select/car/<string:brand>', methods=['POST'])
 def select_car(brand):

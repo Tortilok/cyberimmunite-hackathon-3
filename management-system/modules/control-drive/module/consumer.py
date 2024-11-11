@@ -10,7 +10,6 @@ from .producer import proceed_to_deliver
 
 MODULE_NAME: str = os.getenv("MODULE_NAME")
 
-
 def handle_event(id, details_str):
     """ Обработчик входящих в модуль задач. """
     details = json.loads(details_str)

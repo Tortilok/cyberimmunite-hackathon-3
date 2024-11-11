@@ -25,7 +25,7 @@ def handle_event(id, details_str):
     print(f"[info] handling event {id}, "
           f"{source}->{deliver_to}: {operation}")
    
-    if operation == "send_response" or operation == "send_error":
+    if operation == "get_tariff":
         print("[COM_MOBILE_DEBUG] catched new send:", details)
         _response_queue.put(details)
 

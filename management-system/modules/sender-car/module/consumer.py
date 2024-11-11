@@ -1,14 +1,27 @@
 import os
 import json
 import threading
+import requests
 
 from uuid import uuid4
 from confluent_kafka import Consumer, OFFSET_BEGINNING
 
 from .producer import proceed_to_deliver
 
+CARS_URL = 'http://cars:8000'
 
 MODULE_NAME: str = os.getenv("MODULE_NAME")
+
+
+def get_cars():
+    response = requests.get(f'{CARS_URL}/car/status/all')
+    if response.status_code == 200:
+        cars = response.json()
+        avaible_cars = [car['brand'] for car in cars if car['occupied_by'] is None]
+        print(f"[info] avaible_cars: {avaible_cars}")
+        return avaible_cars
+    else:
+        return []
 
 
 def handle_event(id, details_str):
@@ -17,10 +30,14 @@ def handle_event(id, details_str):
 
     source: str = details.get("source")
     deliver_to: str = details.get("deliver_to")
+    data: str = details.get("data")
     operation: str = details.get("operation")
 
     print(f"[info] handling event {id}, "
           f"{source}->{deliver_to}: {operation}")
+
+    if operation == "get_cars":
+        return get_cars()
 
 
 def consumer_job(args, config):

@@ -37,19 +37,36 @@ def initialize_database():
     Base.metadata.create_all(engine)
 
 
+def send_tariff(id, details):
+    details["deliver_to"] = "com-mobile"
+    details["data"] = TARIFF
+    proceed_to_deliver(id, details)
+
+
+def send_cars(id, details):
+    details["deliver_to"] = "manage-drive"
+    proceed_to_deliver(id, details)
+
+
 def handle_event(id, details_str):
     """ Обработчик входящих в модуль задач. """
+    Session = sessionmaker(bind=engine)
+    session = Session()
+
     details = json.loads(details_str)
 
     source: str = details.get("source")
     deliver_to: str = details.get("deliver_to")
+    data: str = details.get("data")
     operation: str = details.get("operation")
 
     print(f"[info] handling event {id}, "
           f"{source}->{deliver_to}: {operation}")
 
-    Session = sessionmaker(bind=engine)
-    session = Session()
+    if operation == "get_tariff":
+        return send_tariff(id, details)
+    elif operation == "get_cars":
+        return send_cars(id, details)
 
 
 def consumer_job(args, config):

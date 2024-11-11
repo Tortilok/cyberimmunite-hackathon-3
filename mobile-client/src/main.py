@@ -11,7 +11,7 @@ PORT = 8000
 MODULE_NAME = os.getenv('MODULE_NAME')
 app = Flask(__name__)
 
-MANAGMENT_URL = 'http://management_system:8000'
+MANAGMENT_URL = 'http://0.0.0.0:6066'
 PAYMENT_URL = 'http://payment_system:8000'
 CARS_URL = 'http://cars:8000'
 
@@ -21,7 +21,6 @@ CARS_URL = 'http://cars:8000'
 def get_cars():
     data = request.json
     name = data.get('name')
-    # password = data.get('password')
     experience = data.get('experience')
     cars = get_car()
     while len(cars) == 0:

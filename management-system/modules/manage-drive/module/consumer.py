@@ -11,16 +11,25 @@ from .producer import proceed_to_deliver
 MODULE_NAME: str = os.getenv("MODULE_NAME")
 
 
+def get_cars(id, details):
+    details["deliver_to"] = "verify"
+    proceed_to_deliver(id, details)
+
+
 def handle_event(id, details_str):
     """ Обработчик входящих в модуль задач. """
     details = json.loads(details_str)
 
     source: str = details.get("source")
     deliver_to: str = details.get("deliver_to")
+    data: str = details.get("data")
     operation: str = details.get("operation")
 
     print(f"[info] handling event {id}, "
           f"{source}->{deliver_to}: {operation}")
+
+    if operation == "get_cars":
+        return get_cars(id, details)
 
 
 def consumer_job(args, config):

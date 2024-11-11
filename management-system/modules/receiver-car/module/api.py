@@ -10,7 +10,6 @@ from werkzeug.exceptions import HTTPException
 
 
 # Константы
-CARS_URL = 'http://cars:8000'
 HOST: str = "0.0.0.0"
 PORT: int = int(os.getenv("MODULE_PORT"))
 MODULE_NAME: str = os.getenv("MODULE_NAME")
