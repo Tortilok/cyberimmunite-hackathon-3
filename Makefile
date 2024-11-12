@@ -24,9 +24,9 @@ dev_install:
 	.venv/bin/pip install -r requirements.txt
 
 remove_kafka:
-	docker stop zookeeper broker
-	docker rm zookeeper broker
-
+	if docker stop zookeeper broker; then \
+		docker rm zookeeper broker; \
+	fi
 all:
 	make remove_kafka
 	docker compose down
