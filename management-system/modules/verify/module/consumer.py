@@ -26,7 +26,7 @@ def handle_event(id, details_str):
     print(f"[info] handling event {id}, "
           f"{source}->{deliver_to}: {operation}")
 
-    whitelist = ["get_cars"]
+    whitelist = ["get_cars", "get_status"]
 
     if operation in whitelist:
         return send_to_auth(id, details)

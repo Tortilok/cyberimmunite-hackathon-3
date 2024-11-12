@@ -1,17 +1,20 @@
 import os
 import json
 import threading
+import multiprocessing
 
-from uuid import uuid4
 from confluent_kafka import Consumer, OFFSET_BEGINNING
 
 from .producer import proceed_to_deliver
 
 
-MODULE_NAME: str = os.getenv("MODULE_NAME")
+_response_queue: multiprocessing.Queue = None
+MODULE_NAME = os.getenv("MODULE_NAME")
 
 
 def handle_event(id, details_str):
+    global _response_queue
+
     """ Обработчик входящих в модуль задач. """
     details = json.loads(details_str)
 
@@ -21,6 +24,10 @@ def handle_event(id, details_str):
 
     print(f"[info] handling event {id}, "
           f"{source}->{deliver_to}: {operation}")
+
+    if operation == "get_tariff":
+        print("[RECEIVER_CAR_DEBUG] catched new send:", details)
+        _response_queue.put(details)
 
 
 def consumer_job(args, config):
@@ -40,10 +47,13 @@ def consumer_job(args, config):
     try:
         while True:
             msg = consumer.poll(1.0)
+
             if msg is None:
                 pass
+
             elif msg.error():
                 print(f"[error] {msg.error()}")
+
             else:
                 try:
                     id = msg.key().decode('utf-8')
@@ -52,12 +62,18 @@ def consumer_job(args, config):
                 except Exception as e:
                     print(f"[error] Malformed event received from " \
                           f"topic {topic}: {msg.value()}. {e}")
+
     except KeyboardInterrupt:
         pass
 
     finally:
         consumer.close()
 
-def start_consumer(args, config):
+
+def start_consumer(args, config, response_queue):
+    global _response_queue
+    _response_queue = response_queue
+
     print(f'{MODULE_NAME}_consumer started')
+
     threading.Thread(target=lambda: consumer_job(args, config)).start()

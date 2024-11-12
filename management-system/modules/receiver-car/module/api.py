@@ -23,21 +23,52 @@ _response_queue: multiprocessing.Queue = None
 app = Flask(__name__)
 
 
-@app.get("/")
-def index():
-    print("Connected to", HOST, PORT)
-    return {"message": "ok"}
+def send_to_control_drive(details):
+    if not details:
+        abort(400)
 
-'''# Handler for telemtry car
+    details["deliver_to"] = "control-drive"
+    details["source"] = MODULE_NAME
+    details["id"] = uuid4().__str__()
+
+    try:
+        _requests_queue.put(details)
+        print(f"{MODULE_NAME} update event: {details}")
+    except Exception as e:
+        print("[RECEIVER_CAR_DEBUG] malformed request", e)
+        abort(400)
+
+# Handler for telemtry car
 @app.route('/telemetry/<string:brand>', methods=['POST'])
 def telemetry(brand):
     data = request.json['status']
     speed = data.get('speed')
     coordinates = data.get('coordinates')
     print(f'f"{brand} Скорость: {speed:.2f} км/ч, Координаты: {coordinates}"')
-    return jsonify(None)'''
+    return jsonify(None)
 
-'''# Handler for return car
+
+@app.route('/car/status/all', methods=['POST'])
+def cars():
+    data = request.json
+    cars = data.get("cars")
+    details_to_send = {"data": cars,
+                       "operation": "answer_cars"}
+    send_to_control_drive(details_to_send)
+    return jsonify("ok")
+
+
+@app.route('/car/status', methods=['POST'])
+def status():
+    data = request.json
+    status = data.get("status")
+    details_to_send = {"data": status,
+                       "operation": "answer_status"}
+    send_to_control_drive(details_to_send)
+    return jsonify("ok")
+
+
+# Handler for return car
 @app.route('/return/<string:name>', methods=['POST'])
 def return_car(name):
     client = Client.query.filter_by(client_name=name).one_or_none()
@@ -58,7 +89,7 @@ def return_car(name):
     else:
         print(f"Такой клиент{name} не арендовал машину.")
         return jsonify({'error': True}), 404
-    
+
 # Handler for access car
 @app.route('/access/<string:name>', methods=['POST'])
 def access(name):
@@ -72,7 +103,7 @@ def access(name):
             return jsonify({'access': False}), 405
     else:
         print(f"Доступ запрещён {name}")
-        return jsonify({'access': False}), 404'''
+        return jsonify({'access': False}), 404
 
 
 # Обработчик ошибок

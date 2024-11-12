@@ -7,8 +7,11 @@ from confluent_kafka import Consumer, OFFSET_BEGINNING
 
 from .producer import proceed_to_deliver
 
-
 MODULE_NAME: str = os.getenv("MODULE_NAME")
+
+def send_to_manage_drive(id, details):
+    details["deliver_to"] = "manage-drive"
+    proceed_to_deliver(id, details)
 
 def handle_event(id, details_str):
     """ Обработчик входящих в модуль задач. """
@@ -16,10 +19,14 @@ def handle_event(id, details_str):
 
     source: str = details.get("source")
     deliver_to: str = details.get("deliver_to")
+    data: str = details.get("data")
     operation: str = details.get("operation")
 
     print(f"[info] handling event {id}, "
           f"{source}->{deliver_to}: {operation}")
+
+    if operation != "telemetry":
+        return send_to_manage_drive(id, details)
 
 
 def consumer_job(args, config):

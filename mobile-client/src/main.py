@@ -11,7 +11,7 @@ PORT = 8000
 MODULE_NAME = os.getenv('MODULE_NAME')
 app = Flask(__name__)
 
-MANAGMENT_URL = 'http://0.0.0.0:6066'
+MANAGMENT_URL = 'http://com-mobile:6066'
 PAYMENT_URL = 'http://payment_system:8000'
 CARS_URL = 'http://cars:8000'
 

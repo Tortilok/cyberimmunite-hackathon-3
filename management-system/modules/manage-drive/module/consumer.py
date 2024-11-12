@@ -11,8 +11,13 @@ from .producer import proceed_to_deliver
 MODULE_NAME: str = os.getenv("MODULE_NAME")
 
 
-def get_cars(id, details):
+def send_to_verify(id, details):
     details["deliver_to"] = "verify"
+    proceed_to_deliver(id, details)
+
+
+def send_to_profile_client(id, details):
+    details["deliver_to"] = "profile-client"
     proceed_to_deliver(id, details)
 
 
@@ -29,7 +34,14 @@ def handle_event(id, details_str):
           f"{source}->{deliver_to}: {operation}")
 
     if operation == "get_cars":
-        return get_cars(id, details)
+        return send_to_verify(id, details)
+    elif operation == "answer_cars":
+        details["data"] = [car['brand'] for car in data if car['occupied_by'] is None]
+        return send_to_profile_client(id, details)
+    elif operation == "get_status":
+        return send_to_verify(id, details)
+    elif operation == "answer_status":
+        return send_to_profile_client(id, details)
 
 
 def consumer_job(args, config):

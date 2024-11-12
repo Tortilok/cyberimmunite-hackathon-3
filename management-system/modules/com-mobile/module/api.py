@@ -13,7 +13,7 @@ from werkzeug.exceptions import HTTPException
 HOST: str = "0.0.0.0"
 PORT: int = int(os.getenv("MODULE_PORT"))
 MODULE_NAME: str = os.getenv("MODULE_NAME")
-MAX_WAIT_TIME: int = 10
+MAX_WAIT_TIME: int = 30
 
 
 # Очереди задач и ответов
@@ -25,7 +25,6 @@ app = Flask(__name__)
 
 
 def send_to_profile_client(details):
-    """ Отправляет задачу на проверку аутентичности. """
     if not details:
         abort(400)
 
@@ -93,7 +92,6 @@ def get_tariff():
     return jsonify(data)
 
 
-'''
 # Select car and prepayment calculation
 @app.route('/select/car/<string:brand>', methods=['POST'])
 def select_car(brand):
@@ -101,27 +99,14 @@ def select_car(brand):
     name = data.get('client_name')
     experience = data.get('experience')
     tariff = data.get('tariff')
-    response = requests.post(f'{PAYMENT_URL}/clients', json={'name': name})
-    if response.status_code == 201 or 200:
-        client = Client.query.filter_by(client_name=name).one_or_none()
-        if client is None:
-            client = Client(client_name=name, experience=experience)
-            db.session.add(client)
-            db.session.commit()
-        client.car = brand
-        client.tariff = tariff
-        car = requests.get(f'{CARS_URL}/car/status/{client.car}').json()
-        amount = counter_prepayment(car)
-        client.prepayment = amount
-        db.session.commit()
-        print(f'Сформирована предоплата: {client.prepayment}')
-        response = requests.post(f'{PAYMENT_URL}/clients/{response.json()[0]['id']}/prepayment', json={'amount': client.prepayment})
+    details_to_send = {
+        "operation": "select_car",
+        "data": [name, experience, tariff, brand]
+    }
+    send_to_profile_client(details_to_send)
+    data = wait_response()
+    return jsonify(data)
 
-        return jsonify(response.json())
-    else:
-        print("Ошибка при создании клиента:", client.json())
-        return None
-'''
 
 # Обработчик ошибок
 @app.errorhandler(HTTPException)

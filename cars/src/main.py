@@ -8,7 +8,7 @@ import os
 import threading
 from werkzeug.exceptions import HTTPException
 
-MANAGMENT_URL = 'http://0.0.0.0:6070'
+MANAGMENT_URL = 'http://receiver-car:6070'
 
 HOST = '0.0.0.0'
 PORT = 8000
@@ -111,6 +111,7 @@ cars = load_cars_from_json(f'{BASE_DIR}/data/cars.json')
 @app.route('/car/status/all', methods=['GET'])
 def get_all_car_statuses():
     statuses = [car.get_status() for car in cars]
+    requests.post(f'{MANAGMENT_URL}/car/status/all', json={'cars': statuses}) # Реализация разделения модуля коммуникации (ответы приходят на отдельный handler)
     return jsonify(statuses)
 
 
@@ -148,6 +149,7 @@ def get_car_status(brand):
     car = next((car for car in cars if car.brand.lower() == brand.lower()), None)
     if car:
         status = car.get_status()
+        requests.post(f'{MANAGMENT_URL}/car/status', json={'status': status}) # Реализация разделения модуля коммуникации (ответы приходят на отдельный handler)
         return jsonify(status)
     else:
         return jsonify({"error": "Автомобиль не найден."}), 404

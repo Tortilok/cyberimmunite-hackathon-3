@@ -1,3 +1,4 @@
 confluent-kafka==2.0.2
 configparser
 Flask==2.2.5
+requests

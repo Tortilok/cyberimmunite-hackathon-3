@@ -7,7 +7,7 @@ from datetime import datetime
 from enum import Enum
 from werkzeug.exceptions import HTTPException
 
-MANAGMENT_URL = 'http://management_system:8000'
+MANAGMENT_URL = 'http://bank-pay:6065'
 
 HOST = '0.0.0.0'
 PORT = 8000

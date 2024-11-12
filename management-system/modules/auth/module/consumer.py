@@ -12,7 +12,7 @@ MODULE_NAME: str = os.getenv("MODULE_NAME")
 
 #def auth(data):
 
-def get_cars(id, details):
+def send_to_sender_car(id, details):
     details["deliver_to"] = "sender-car"
     proceed_to_deliver(id, details)
 
@@ -29,8 +29,7 @@ def handle_event(id, details_str):
     print(f"[info] handling event {id}, "
           f"{source}->{deliver_to}: {operation}")
 
-    if operation == "get_cars":
-        return get_cars(id, details)
+    return send_to_sender_car(id, details)
 
 
 def consumer_job(args, config):

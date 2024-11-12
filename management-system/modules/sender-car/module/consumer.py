@@ -14,14 +14,13 @@ MODULE_NAME: str = os.getenv("MODULE_NAME")
 
 
 def get_cars():
-    response = requests.get(f'{CARS_URL}/car/status/all')
-    if response.status_code == 200:
-        cars = response.json()
-        avaible_cars = [car['brand'] for car in cars if car['occupied_by'] is None]
-        print(f"[info] avaible_cars: {avaible_cars}")
-        return avaible_cars
-    else:
-        return []
+    requests.get(f'{CARS_URL}/car/status/all')
+    return None
+
+
+def get_status_car(car):
+    requests.get(f'{CARS_URL}/car/status/{car}').json()
+    return None
 
 
 def handle_event(id, details_str):
@@ -38,6 +37,8 @@ def handle_event(id, details_str):
 
     if operation == "get_cars":
         return get_cars()
+    if operation == "get_status":
+        return get_status_car(data)
 
 
 def consumer_job(args, config):

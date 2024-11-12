@@ -37,15 +37,86 @@ def initialize_database():
     Base.metadata.create_all(engine)
 
 
-def send_tariff(id, details):
+def send_to_com_mobile(id, details):
     details["deliver_to"] = "com-mobile"
-    details["data"] = TARIFF
     proceed_to_deliver(id, details)
 
 
-def send_cars(id, details):
+def send_to_manage_drive(id, details):
     details["deliver_to"] = "manage-drive"
     proceed_to_deliver(id, details)
+
+
+def send_to_bank_pay(id, details):
+    details["deliver_to"] = "bank-pay"
+    proceed_to_deliver(id, details)
+
+
+def counter_prepayment(car):
+    counter = 0
+    if car['has_air_conditioner']:
+        counter += 7
+    if car['has_heater']:
+        counter += 5
+    if car['has_navigator']:
+        counter += 10
+    return counter
+
+
+def counter_payment(trip_time, tariff, experience):
+    tariff_min = 2
+    tariff_hours = 80
+    counter = 0
+    if tariff == 'min':
+        if experience < 1:
+            counter += round(trip_time * tariff_min*2, 2)
+        else:
+            counter += round(trip_time * tariff_min/experience, 2)
+    elif tariff == 'hour':
+        if experience < 1:
+            counter += round(trip_time * tariff_hours*2, 2)
+        else:
+            counter += round(trip_time / 10 * tariff_hours/experience, 2)
+    return counter
+
+
+def select_car(session, data):
+    name = data[0]
+    experience = data[1]
+    tariff = data[2]
+    brand = data[3]
+    query = session.query(Client)
+    client = query.filter_by(client_name=name).one_or_none()
+    if client is None:
+        client = Client(client_name=name, experience=experience)
+        session.add(client)
+        session.commit()
+    client.car = brand
+    client.tariff = tariff
+    session.commit()
+    return brand
+
+
+def prepayment(session, car):
+    amount = counter_prepayment(car)
+    query = session.query(Client)
+    brand = car['brand']
+    client = query.filter_by(car=brand).one_or_none()
+    if client:
+        client.prepayment = amount
+        name = client.client_name
+        session.commit()
+        return [name, amount]
+    else:
+        return []
+
+
+def confirm_prepayment(session, name, status):
+    query = session.query(Client)
+    client = query.filter_by(client_name=name).one_or_none()
+    if client:
+        client.prepayment_status = status
+        session.commit()
 
 
 def handle_event(id, details_str):
@@ -64,9 +135,26 @@ def handle_event(id, details_str):
           f"{source}->{deliver_to}: {operation}")
 
     if operation == "get_tariff":
-        return send_tariff(id, details)
+        details["data"] = TARIFF
+        return send_to_com_mobile(id, details)
     elif operation == "get_cars":
-        return send_cars(id, details)
+        return send_to_manage_drive(id, details)
+    elif operation == "answer_cars":
+        return send_to_com_mobile(id, details)
+    elif operation == "select_car":
+        details["data"] = select_car(session, data)
+        details["operation"] = "get_status"
+        return send_to_manage_drive(id, details)
+    elif operation == "answer_status":
+        details["data"] = prepayment(session, data)
+        details["operation"] = "get_prepayment_id"
+        return send_to_bank_pay(id, details)
+    elif operation == "get_prepayment_id":
+        return send_to_com_mobile(id, details)
+    elif operation == "confirm_prepayment":
+        name = details.get("name")
+        status = details.get("status")
+        confirm_prepayment(session, name, status)
 
 
 def consumer_job(args, config):
@@ -103,6 +191,7 @@ def consumer_job(args, config):
 
     finally:
         consumer.close()
+
 
 def start_consumer(args, config):
     initialize_database()

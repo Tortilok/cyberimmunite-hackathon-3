@@ -28,6 +28,12 @@ def handle_event(id, details_str):
     if operation == "get_tariff":
         print("[COM_MOBILE_DEBUG] catched new send:", details)
         _response_queue.put(details)
+    elif operation == "answer_cars":
+        print("[COM_MOBILE_DEBUG] catched new send:", details)
+        _response_queue.put(details)
+    elif operation == "get_prepayment_id":
+        print("[COM_MOBILE_DEBUG] catched new send:", details)
+        _response_queue.put(details)
 
 
 def consumer_job(args, config):

@@ -15,7 +15,7 @@ MODULES := monitor \
 			mobile-client \
 
 
-SLEEP_TIME := 20
+SLEEP_TIME := 10
 
 dev_install:
 	sudo apt install librdkafka-dev python3-venv

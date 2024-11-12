@@ -24,48 +24,34 @@ _response_queue: multiprocessing.Queue = None
 app = Flask(__name__)
 
 
-def counter_prepayment(car):
-    counter = 0
-    if car['has_air_conditioner']:
-        counter += 7
-    if car['has_heater']:
-        counter += 5
-    if car['has_navigator']:
-        counter += 10
-    return counter
+def send_to_profile_client(details):
+    if not details:
+        abort(400)
+
+    details["deliver_to"] = "profile-client"
+    details["source"] = MODULE_NAME
+    details["id"] = uuid4().__str__()
+
+    try:
+        _requests_queue.put(details)
+        print(f"{MODULE_NAME} update event: {details}")
+    except Exception as e:
+        print("[BANK-PAY_DEBUG] malformed request", e)
+        abort(400)
 
 
-def counter_payment(trip_time, tariff, experience):
-    tariff_min = 2
-    tariff_hours = 80
-    counter = 0
-    if tariff == 'min':
-        if experience < 1:
-            counter += round(trip_time * tariff_min*2, 2)
-        else:
-            counter += round(trip_time * tariff_min/experience, 2)
-    elif tariff == 'hour':
-        if experience < 1:
-            counter += round(trip_time * tariff_hours*2, 2)
-        else:
-            counter += round(trip_time / 10 * tariff_hours/experience, 2) 
-    return counter
-
-
-@app.get("/")
-def index():
-    print("Connected to", HOST, PORT)
-    return {"message": "ok"}
-
-'''# Handler for payment system
+# Handler for payment system
 @app.route('/confirm_prepayment/<string:name>', methods=['POST'])
 def confirm_prepayment(name):
-    if client:
-        client.prepayment_status = request.json['status']
-        db.session.commit()
-        print(f'Потверждена предоплата: {request.json}')
-        return jsonify(request.json)
-'''
+    details_to_send = {
+        "operation": "confirm_prepayment",
+        "status": request.json['status'],
+        "name": name
+    }
+    send_to_profile_client(details_to_send)
+    print(f'Потверждена предоплата: {request.json}')
+    return jsonify(request.json)
+
 
 '''# Handler for payment system
 @app.route('/confirm_payment/<string:name>', methods=['POST'])
