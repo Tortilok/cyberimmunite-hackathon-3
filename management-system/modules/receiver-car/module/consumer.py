@@ -25,10 +25,6 @@ def handle_event(id, details_str):
     print(f"[info] handling event {id}, "
           f"{source}->{deliver_to}: {operation}")
 
-    if operation == "get_tariff":
-        print("[RECEIVER_CAR_DEBUG] catched new send:", details)
-        _response_queue.put(details)
-
 
 def consumer_job(args, config):
     consumer = Consumer(config)

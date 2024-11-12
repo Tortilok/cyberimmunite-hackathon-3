@@ -119,6 +119,50 @@ def confirm_prepayment(session, name, status):
         session.commit()
 
 
+def return_car(session, name, trip_time):
+    query = session.query(Client)
+    client = query.filter_by(client_name=name).one_or_none()
+    if client:
+        client.elapsed_time = trip_time
+        name = client.client_name
+        session.commit()
+        amount = counter_payment(trip_time, client.tariff, client.experience)
+        return [name, amount]
+
+
+def access(session, name):
+    query = session.query(Client)
+    client = query.filter_by(client_name=name).one_or_none()
+    if client:
+        if client.prepayment_status == 'paid':
+            print(f"Доступ разрешен {name} до {client.car}")
+            return {'access': True, 'tariff': client.tariff, 'car': client.car, 'name': name}
+
+
+def final_receipt(session, receipt, name):
+    query = session.query(Client)
+    client = query.filter_by(client_name=name).one_or_none()
+    if client:
+        final_amount = receipt['amount'] + client.prepayment
+        created_at = receipt['created_at']
+        final_receipt = {
+            'car': client.car,
+            'name': client.client_name,
+            'final_amount': final_amount,
+            'created_at': created_at,
+            'elapsed_time': client.elapsed_time,
+            'tarif': client.tariff,
+
+        }
+        client.car = ''
+        client.prepayment = ''
+        client.prepayment_status = ''
+        client.tariff = ''
+        client.elapsed_time = 0
+        session.commit()
+        return final_receipt
+
+
 def handle_event(id, details_str):
     """ Обработчик входящих в модуль задач. """
     Session = sessionmaker(bind=engine)
@@ -155,6 +199,20 @@ def handle_event(id, details_str):
         name = details.get("name")
         status = details.get("status")
         confirm_prepayment(session, name, status)
+    elif operation == "access":
+        details["access"] = access(session, details["name"])
+        details["operation"] = "confirm_access"
+        return send_to_manage_drive(id, details)
+    elif operation == "return":
+        details["data"] = return_car(session, details["name"], details["trip_time"])
+        details["operation"] = "get_payment_id"
+        return send_to_bank_pay(id, details)
+    elif operation == "get_payment_id":
+        return send_to_com_mobile(id, details)
+    elif operation == "confirm_payment":
+        details["data"] = final_receipt(session, details["receipt"], details["name"])
+        details["operation"] = "final_receipt"
+        return send_to_com_mobile(id, details)
 
 
 def consumer_job(args, config):

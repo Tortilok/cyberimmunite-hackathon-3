@@ -17,6 +17,15 @@ def send_to_profile_client(id, details):
     proceed_to_deliver(id, details)
 
 
+def create_payment(data):
+    name = data[0]
+    amount = data[1]
+    response = requests.post(f'{PAYMENT_URL}/clients', json={'name': name})
+    if response.status_code == 200 or 201:
+        response = requests.post(f'{PAYMENT_URL}/invoices', json={'client_id': response.json()[0]['id'], 'amount': amount})
+        return response.json()
+
+
 def create_prepayment(data):
     name = data[0]
     amount = data[1]
@@ -24,6 +33,7 @@ def create_prepayment(data):
     if response.status_code == 200 or 201:
         response = requests.post(f'{PAYMENT_URL}/clients/{response.json()[0]['id']}/prepayment', json={'amount': amount})
         return response.json()
+
 
 def handle_event(id, details_str):
 
@@ -40,6 +50,9 @@ def handle_event(id, details_str):
 
     if operation == "get_prepayment_id":
         details["data"] = create_prepayment(data)
+        return send_to_profile_client(id, details)
+    elif operation == "get_payment_id":
+        details["data"] = create_payment(data)
         return send_to_profile_client(id, details)
 
 def consumer_job(args, config):

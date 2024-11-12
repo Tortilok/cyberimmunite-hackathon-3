@@ -128,8 +128,8 @@ def confirm_payment(invoice_id: int):
     client = Client.query.get(invoice.client_id)
     invoice.status = PaymentStatus.PAID
     db.session.commit()
-    final_receipt = requests.post(f'{MANAGMENT_URL}/confirm_payment/{client.name}', json={'id': invoice.id, 'status': invoice.status.value})
-    return jsonify({'id': invoice.id, 'status': invoice.status.value, 'final_receipt': final_receipt.json()})
+    requests.post(f'{MANAGMENT_URL}/confirm_payment/{client.name}', json={'id': invoice.id, 'status': invoice.status.value})
+    return jsonify({'id': invoice.id, 'status': invoice.status.value})
 
 # Отправка чека
 @app.route('/invoices/<int:invoice_id>/receipt', methods=['GET'])

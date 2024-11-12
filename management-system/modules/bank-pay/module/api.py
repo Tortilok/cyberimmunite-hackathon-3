@@ -3,7 +3,7 @@ import time
 import json
 import threading
 import multiprocessing
-
+import requests
 from uuid import uuid4
 from flask import Flask, request, jsonify, abort
 from werkzeug.exceptions import HTTPException
@@ -53,34 +53,16 @@ def confirm_prepayment(name):
     return jsonify(request.json)
 
 
-'''# Handler for payment system
+# Handler for payment system
 @app.route('/confirm_payment/<string:name>', methods=['POST'])
 def confirm_payment(name):
-    client = Client.query.filter_by(client_name=name).one_or_none()
-    if client:
-        print(f'Потверждена оплата: {request.json}')
-        response = requests.get(f'{PAYMENT_URL}/invoices/{request.json['id']}/receipt')
-        if response.status_code == 200:
-            receipt = response.json()['receipt']
-            final_amount = receipt['amount'] + client.prepayment
-            created_at = receipt['created_at']
-            final_receipt = {
-                'car': client.car,
-                'name': client.client_name,
-                'final_amount': final_amount,
-                'created_at': created_at,
-                'elapsed_time': client.elapsed_time,
-                'tarif': client.tariff,
-
-            }
-            client.car = ''
-            client.prepayment = ''
-            client.prepayment_status = ''
-            client.tariff = ''
-            client.elapsed_time = 0
-            db.session.commit()
-        print(f'Финальный чек: {final_receipt}')
-        return jsonify(final_receipt)'''
+    print(f'Потверждена оплата: {request.json}')
+    response = requests.get(f'{PAYMENT_URL}/invoices/{request.json['id']}/receipt')
+    if response.status_code == 200:
+        receipt = response.json()['receipt']
+        details_to_send = {"operation": "confirm_payment", "receipt": receipt, "name": name}
+        send_to_profile_client(details_to_send)
+        return "ok"
 
 
 

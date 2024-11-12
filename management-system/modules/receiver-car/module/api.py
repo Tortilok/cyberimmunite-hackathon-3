@@ -38,14 +38,16 @@ def send_to_control_drive(details):
         print("[RECEIVER_CAR_DEBUG] malformed request", e)
         abort(400)
 
+
 # Handler for telemtry car
 @app.route('/telemetry/<string:brand>', methods=['POST'])
 def telemetry(brand):
     data = request.json['status']
-    speed = data.get('speed')
-    coordinates = data.get('coordinates')
-    print(f'f"{brand} Скорость: {speed:.2f} км/ч, Координаты: {coordinates}"')
-    return jsonify(None)
+    details_to_send = {"data": data,
+                       "operation": "telemetry",
+                       "car": brand}
+    send_to_control_drive(details_to_send)
+    return jsonify("ok")
 
 
 @app.route('/car/status/all', methods=['POST'])
@@ -71,39 +73,23 @@ def status():
 # Handler for return car
 @app.route('/return/<string:name>', methods=['POST'])
 def return_car(name):
-    client = Client.query.filter_by(client_name=name).one_or_none()
-    if client:
-        data = request.json
-        trip_time = data.get('status')['trip_time']
-        client.elapsed_time = trip_time
-        db.session.commit()
-        amount = counter_payment(trip_time, client.tariff, client.experience)
-        response = requests.post(f'{PAYMENT_URL}/clients', json={'name': name})
-        if response.status_code == 201 or 200:
-            response = requests.post(f'{PAYMENT_URL}/invoices', json={'client_id': response.json()[0]['id'], 'amount': amount})
-            invoice = response.json()
-            return jsonify(invoice)
-        else:
-            print('Нет связи с банком')
-        return jsonify({'error': True}), 404
-    else:
-        print(f"Такой клиент{name} не арендовал машину.")
-        return jsonify({'error': True}), 404
+    data = request.json
+    trip_time = data.get('status')['trip_time']
+    details_to_send = {"data": data,
+                       "trip_time": trip_time,
+                       "name": name,
+                       "operation": "return"}
+    send_to_control_drive(details_to_send)
+    return jsonify("ok")
+
 
 # Handler for access car
 @app.route('/access/<string:name>', methods=['POST'])
 def access(name):
-    client = Client.query.filter_by(client_name=name).one_or_none()
-    if client:
-        if client.prepayment_status == 'paid':
-            print(f"Доступ разрешен {name}")
-            return jsonify({'access': True, 'tariff': client.tariff, 'car': client.car})
-        else:
-            print(f"Доступ запрещён {name}")
-            return jsonify({'access': False}), 405
-    else:
-        print(f"Доступ запрещён {name}")
-        return jsonify({'access': False}), 404
+    details_to_send = {"operation": "access",
+                       "name": name}
+    send_to_control_drive(details_to_send)
+    return jsonify("ok")
 
 
 # Обработчик ошибок

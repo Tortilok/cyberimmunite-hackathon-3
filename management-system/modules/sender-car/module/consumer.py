@@ -18,8 +18,19 @@ def get_cars():
     return None
 
 
+def confirm_access(access):
+    name = access["name"]
+    requests.post(f'{CARS_URL}/access/{name}', json=access)
+    return None
+
+
 def get_status_car(car):
-    requests.get(f'{CARS_URL}/car/status/{car}').json()
+    requests.get(f'{CARS_URL}/car/status/{car}')
+    return None
+
+
+def stop_car(car):
+    requests.get(f'{CARS_URL}/emergency/{car}')
     return None
 
 
@@ -39,7 +50,10 @@ def handle_event(id, details_str):
         return get_cars()
     if operation == "get_status":
         return get_status_car(data)
-
+    if operation == "confirm_access":
+        return confirm_access(details["access"])
+    if operation == "stop":
+        return stop_car(details["car"])
 
 def consumer_job(args, config):
     consumer = Consumer(config)

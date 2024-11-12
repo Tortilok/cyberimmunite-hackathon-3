@@ -2,14 +2,24 @@ import os
 import json
 import threading
 import multiprocessing
-
+import requests
 from confluent_kafka import Consumer, OFFSET_BEGINNING
 
 from .producer import proceed_to_deliver
-
+MOBILE_URL = 'http://mobile-client:8000'
 
 _response_queue: multiprocessing.Queue = None
 MODULE_NAME = os.getenv("MODULE_NAME")
+
+
+def payment(data):
+    requests.post(f'{MOBILE_URL}/payment', json=data)
+    return None
+
+
+def final(data):
+    requests.post(f'{MOBILE_URL}/final', json=data)
+    return None
 
 
 def handle_event(id, details_str):
@@ -20,6 +30,7 @@ def handle_event(id, details_str):
 
     source: str = details.get("source")
     deliver_to: str = details.get("deliver_to")
+    data: str = details.get("data")
     operation: str = details.get("operation")
 
     print(f"[info] handling event {id}, "
@@ -34,6 +45,12 @@ def handle_event(id, details_str):
     elif operation == "get_prepayment_id":
         print("[COM_MOBILE_DEBUG] catched new send:", details)
         _response_queue.put(details)
+    elif operation == "get_payment_id":
+        print("[COM_MOBILE_DEBUG] catched new send:", details)
+        return payment(data)
+    elif operation == "final_receipt":
+        print("[COM_MOBILE_DEBUG] catched new send:", details)
+        return final(data)
 
 
 def consumer_job(args, config):

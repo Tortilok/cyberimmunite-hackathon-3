@@ -14,7 +14,8 @@ app = Flask(__name__)
 MANAGMENT_URL = 'http://com-mobile:6066'
 PAYMENT_URL = 'http://payment_system:8000'
 CARS_URL = 'http://cars:8000'
-
+data = None
+flag = True
 
 # Выбор и запрос авто (автоматически выбирает из свободных машин и выбирает тариф)
 @app.route('/cars', methods=['POST'])
@@ -49,12 +50,17 @@ def start_drive():
 
 @app.route('/stop_drive', methods=['POST'])
 def stop_drive():
-    data = request.json
-    name = data.get('name')
+    global data
+    global flag
+    data1 = request.json
+    name = data1.get('name')
     client_access = access(name)
     if client_access['access']:
-        invoice = stop_travel(client_access['car'])
-        return jsonify(invoice)
+        stop_travel(client_access['car'])
+        while flag:
+            time.sleep(1)
+        flag = True
+        return jsonify(data)
     else:
         return jsonify({"error": "Доступ на данную операцию не разрешён"}), 404
 
@@ -72,25 +78,35 @@ def prepayment():
 
 @app.route('/final_pay', methods=['POST'])
 def final_pay():
-    data = request.json
-    invoice_id = data.get('invoice_id')
-    final_receipt = confirm_payment(invoice_id)
-    if final_receipt.status_code == 200:
-        return jsonify(final_receipt.json()['final_receipt'])
-    else:
-        return jsonify(final_receipt.json()), 404
-
-'''
-def auth(name, password, experience):
-    response = requests.post(f'{MANAGMENT_URL}/auth/{name}', json={'password': password, 'experience': experience})
+    global data
+    data1 = request.json
+    invoice_id = data1.get('id')
+    response = confirm_payment(invoice_id)
     if response.status_code == 200:
-        print(f"Авторизован {name}", response.json())
-        return response.json()['login']
-    elif response.status_code == 404:
-        print(f"Неверный пароль {name}", response.json())
+        while flag:
+            time.sleep(1)
+        return jsonify(data)
     else:
-        print("Ошибка авторизации", response.json())
-'''
+        return jsonify(None), 404
+
+
+@app.route('/payment', methods=['POST']) # Реализация ответа платежа
+def payment():
+    global data
+    global flag
+    data = request.json
+    flag = False
+    return jsonify("ok")
+
+
+@app.route('/final', methods=['POST']) # Реализация ответа финального платежа
+def final():
+    global data
+    global flag
+    data = request.json
+    flag = False
+    return jsonify("ok")
+
 
 def get_car():
     response = requests.get(f'{MANAGMENT_URL}/cars')
@@ -130,7 +146,6 @@ def confirm_payment(invoice_id: int):
     response = requests.post(f'{PAYMENT_URL}/invoices/{invoice_id}/confirm')
     if response.status_code == 200:
         print("Оплата потверждена:", response.json())
-        print("Финальный чек:", response.json()['final_receipt'])
         return response
     else:
         print("Ошибка при подтверждении оплаты:", response.json())

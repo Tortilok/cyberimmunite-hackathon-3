@@ -9,8 +9,17 @@ from .producer import proceed_to_deliver
 
 MODULE_NAME: str = os.getenv("MODULE_NAME")
 
+def check_speed_and_coor(speed, coordinates):
+    if speed > 200:
+        return "stop"
+    
+
 def send_to_manage_drive(id, details):
     details["deliver_to"] = "manage-drive"
+    proceed_to_deliver(id, details)
+
+def send_to_sender_car(id, details):
+    details["deliver_to"] = "sender-car"
     proceed_to_deliver(id, details)
 
 def handle_event(id, details_str):
@@ -27,7 +36,15 @@ def handle_event(id, details_str):
 
     if operation != "telemetry":
         return send_to_manage_drive(id, details)
-
+    else:
+        speed = data.get('speed')
+        coordinates = data.get('coordinates')
+        command = check_speed_and_coor(speed, coordinates)
+        if command == "stop":
+            details["operation"] = "stop"
+            return send_to_sender_car(id, details)
+        else:
+            return send_to_manage_drive(id, details)
 
 def consumer_job(args, config):
     consumer = Consumer(config)

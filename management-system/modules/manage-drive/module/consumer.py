@@ -42,6 +42,16 @@ def handle_event(id, details_str):
         return send_to_verify(id, details)
     elif operation == "answer_status":
         return send_to_profile_client(id, details)
+    elif operation == "access":
+        return send_to_profile_client(id, details)
+    elif operation == "confirm_access":
+        return send_to_verify(id, details)
+    elif operation == "return":
+        return send_to_profile_client(id, details)
+    elif operation == "telemetry":
+        speed = data.get('speed')
+        coordinates = data.get('coordinates')
+        print(f"{details["car"]} Скорость: {speed:.2f} км/ч, Координаты: {coordinates}")
 
 
 def consumer_job(args, config):
