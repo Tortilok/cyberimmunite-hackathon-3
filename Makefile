@@ -24,6 +24,7 @@ dev_install:
 	.venv/bin/pip install -r requirements.txt
 
 all:
+	docker compose down
 	docker compose up --build -d
 	sleep ${SLEEP_TIME}
 
