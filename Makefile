@@ -23,7 +23,12 @@ dev_install:
 	.venv/bin/python3 -m pip install -U pip
 	.venv/bin/pip install -r requirements.txt
 
+remove_kafka:
+	docker stop zookeeper broker
+	docker rm zookeeper broker
+
 all:
+	make remove_kafka
 	docker compose down
 	docker compose up --build -d
 	sleep ${SLEEP_TIME}
